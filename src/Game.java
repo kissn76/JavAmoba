@@ -5,54 +5,50 @@ public class Game {
     private int winNumber;
     private int winnerPlayer;
 
+    private final int MINCOLUMN = 3;
+    private final int MINROW = 3;
+    private final int MINWINNUMBER = 3;
+
     public Game() throws Exception {
         this(20, 20, 5, 1);
     }
 
-    public Game(int boardWidth) throws Exception {
-        this(boardWidth, boardWidth, 5, 1);
-    }
-
-    public Game(int boardWidth, int winNumber) throws Exception {
-        this(boardWidth, boardWidth, winNumber, 1);
-    }
-
-    public Game(int boardWidth, int boardHeight, int winNumber) throws Exception {
-        this(boardWidth, boardHeight, winNumber, 1);
-    }
-
     /**
-     * @param  boardWidth  A tábla szélessége.
-     * @param  boardHeight A tábla magassága.
+     * @param  boardRow    A tábla sorainak száma.
+     * @param  boardColumn A tábla oszlopainak száma.
      * @param  winNumber   Ennyi egymás utáni bábu kell a nyeréshez.
      * @param  firstPlayer A kezdő játékos száma.
      * @throws Exception
      */
-    public Game(int boardWidth, int boardHeight, int winNumber, int firstPlayer) throws Exception {
-        if (boardWidth > 0 && boardHeight > 0) {
-            if (winNumber > 0) {
+    public Game(int boardRow, int boardColumn, int winNumber, int firstPlayer) throws Exception {
+        if (boardColumn >= MINCOLUMN && boardRow >= MINROW) {
+            if (winNumber >= MINWINNUMBER) {
                 if (firstPlayer == 1 || firstPlayer == 2) {
-                    this.board = new int[boardHeight][boardWidth];
+                    this.board = new int[boardRow][boardColumn];
                     this.winNumber = winNumber;
                     this.nextPlayer = firstPlayer;
                 } else {
                     throw new Exception("A kezdő játékos száma 1-es vagy 2-es lehet!");
                 }
             } else {
-                throw new Exception("A győztes lerakások száma nem lehet kisebb mint 1!");
+                throw new Exception("A győztes lerakások száma nem lehet kisebb mint " + MINWINNUMBER + "!");
             }
         } else {
-            throw new Exception("A tábla sorainak és oszlopainak száma nem lehet kisebb mint 1!");
+            throw new Exception("A tábla sorainak és oszlopainak száma nem lehet kisebb mint " + MINROW + " és " + MINCOLUMN + "!");
         }
+    }
+
+    public int getNextPlayer() {
+        return nextPlayer;
     }
 
     public void setCell(int row, int column, int player) throws Exception {
         if (this.winnerPlayer == 0) {
             if (player == this.nextPlayer) {
-                if (row < this.board.length && column < this.board[0].length) {
+                if (row >= 0 && row < this.board.length && column >= 0 && column < this.board[0].length) {
                     if (this.board[row][column] == 0) {
                         this.board[row][column] = player;
-                        win();
+                        win(row, column);
                         if (this.winnerPlayer > 0) {
                             return;
                         }
@@ -75,10 +71,30 @@ public class Game {
         if (this.winnerPlayer > 0) {
             System.out.println("A nyertes játékos: " + this.winnerPlayer);
         }
+
+        // 1. sor, oszlopszámok
+        System.out.print("   ");
+        for (int j = 0; j < board[0].length; j++) {
+            System.out.format("|%2d ", j);
+        }
+        System.out.println("|");
+
+        // 2.sor
+        System.out.print("   ");
+        for (int j = 0; j < board[0].length; j++) {
+            System.out.print("|–––");
+        }
+        System.out.println("|");
+
+        // tábla
         for (int i = 0; i < this.board.length; i++) {
+            System.out.format("%3d|", i);    // sorszám az elején
             for (int j = 0; j < this.board[i].length; j++) {
                 char printChar = '-';
                 switch (this.board[i][j]) {
+                    case 0:
+                        printChar = ' ';
+                        break;
                     case 1:
                         printChar = 'X';
                         break;
@@ -86,10 +102,24 @@ public class Game {
                         printChar = 'O';
                         break;
                 }
-                System.out.print(printChar + " ");
+                System.out.print(" " + printChar + " |");   // bogyók a táblán
             }
-            System.out.println();
+            System.out.println(i);  // sorszám a végén
+
+            // sorelválasztók
+            System.out.print("   ");
+            for (int j = 0; j < board[i].length; j++) {
+                System.out.print("|–––");
+            }
+            System.out.println("|");
         }
+
+        // utolsó sor, oszlopszámok
+        System.out.print("   ");
+        for (int j = 0; j < board[0].length; j++) {
+            System.out.format("|%2d ", j);
+        }
+        System.out.println("|");
     }
 
     private void nextPlayer() {
@@ -100,69 +130,118 @@ public class Game {
         }
     }
 
-    private void win() {
-        // sorok ellenőrzése
-        for (int i = 0; i < this.board.length; i++) {
-            int actWinElement = this.board[i][0];
-            int counter = 0;
-            for (int j = 0; j < this.board[i].length; j++) {
-                int actElement = this.board[i][j];
-                if (actElement > 0) {
-                    if (actElement == actWinElement) {
-                        counter++;
-                    } else {
-                        actWinElement = actElement;
-                        counter = 1;
+    /**
+     * Annak ellenőrzése, hogy van-e már nyertes.
+     */
+    private void win(int row, int column) {
+        // Az utoljára lerakott ponttól kiindulva megszámoljuk, hogy hány ugyanolyan
+        // pont van jobbra-balra, le-föl, balfönt-jobblent-átlósan,
+        // ballent-jobbfönt-átlósan
+
+        final int actWinElement = this.board[row][column];
+
+        if (actWinElement > 0) {
+
+            // jobbra-balra
+            int counterHorizental = 1;
+
+            {   // elemtől balra
+                if (column > 0) {
+                    int actColumnIndex = column - 1;
+                    int actElement = this.board[row][actColumnIndex];
+                    while (actColumnIndex >= 0 && actElement == actWinElement) {
+                        counterHorizental++;
+                        actColumnIndex--;
+                        actElement = actColumnIndex >= 0 ? this.board[row][actColumnIndex] : 0;
                     }
-                    if (counter == this.winNumber) {
-                        this.winnerPlayer = actWinElement;
-                        return;
-                    }
-                } else {
-                    actWinElement = actElement;
-                    counter = 0;
                 }
+            }
+
+            {   // elemtől jobbra
+                if (column < board[row].length - 1) {
+                    int actColumnIndex = column + 1;
+                    int actElement = this.board[row][actColumnIndex];
+                    while (actColumnIndex < board[row].length && actElement == actWinElement) {
+                        counterHorizental++;
+                        actColumnIndex++;
+                        actElement = actColumnIndex < board[row].length ? this.board[row][actColumnIndex] : 0;
+                    }
+                }
+            }
+
+            if (counterHorizental >= this.winNumber) {
+                this.winnerPlayer = actWinElement;
+                return;
+            }
+
+            // fel-le, átlósan
+            int counterVertical = 1;        // egyenesel fentről le
+            int counterDiagonalTop = 1;     // bal fentről jobbra le
+            int counterDiagonalBottom = 1;  // bal lentről jobbra fel
+
+            { // elemtől fel
+                if (row > 0) {
+                    int actRowIndex = row - 1;
+                    int actColumnIndexLeft = column - 1;    // fel-balra
+                    int actColumnIndexTop = column;         // fel egyenesen
+                    int actColumnIndexRight = column + 1;   // fel-jobbra
+                    int actElementLeft = actRowIndex >= 0 && actColumnIndexLeft >= 0 ? board[actRowIndex][actColumnIndexLeft] : 0;
+                    int actElementTop = board[actRowIndex][actColumnIndexTop];
+                    int actElementRight = actRowIndex >= 0 && actColumnIndexRight < board[actRowIndex].length ? board[actRowIndex][actColumnIndexRight] : 0;
+                    while (actRowIndex >= 0 && (actElementLeft == actWinElement || actElementTop == actWinElement || actElementRight == actWinElement)) {
+                        actRowIndex--;
+                        if (actElementLeft == actWinElement) {
+                            counterDiagonalTop++;
+                            actColumnIndexLeft--;
+                            actElementLeft = actRowIndex >= 0 && actColumnIndexLeft >= 0 ? board[actRowIndex][actColumnIndexLeft] : 0;
+                        }
+                        if (actElementTop == actWinElement) {
+                            counterVertical++;
+                            actElementTop = actRowIndex >= 0 ? board[actRowIndex][actColumnIndexTop] : 0;
+                        }
+                        if (actElementRight == actWinElement) {
+                            counterDiagonalBottom++;
+                            actColumnIndexRight++;
+                            actElementRight = actRowIndex >= 0 && actColumnIndexRight < board[actRowIndex].length ? board[actRowIndex][actColumnIndexRight] : 0;
+                        }
+                    }
+                }
+            }
+
+            {   // elemtől le
+                if (row < board.length - 1) {
+                    int actRowIndex = row + 1;
+                    int actColumnIndexLeft = column - 1;    // le-balra
+                    int actColumnIndexTop = column;         // le egyenesen
+                    int actColumnIndexRight = column + 1;   // le-jobbra
+                    int actElementLeft = actRowIndex < board.length && actColumnIndexLeft >= 0 ? board[actRowIndex][actColumnIndexLeft] : 0;
+                    int actElementTop = board[actRowIndex][actColumnIndexTop];
+                    int actElementRight = actRowIndex < board.length && actColumnIndexRight < board[actRowIndex].length ? board[actRowIndex][actColumnIndexRight] : 0;
+                    while (actRowIndex < board.length && (actElementLeft == actWinElement || actElementTop == actWinElement || actElementRight == actWinElement)) {
+                        actRowIndex++;
+                        if (actElementLeft == actWinElement) {
+                            counterDiagonalBottom++;
+                            actColumnIndexLeft--;
+                            actElementLeft = actRowIndex < board.length && actColumnIndexLeft >= 0 ? board[actRowIndex][actColumnIndexLeft] : 0;
+                        }
+                        if (actElementTop == actWinElement) {
+                            counterVertical++;
+                            actElementTop = actRowIndex < board.length ? board[actRowIndex][actColumnIndexTop] : 0;
+                        }
+                        if (actElementRight == actWinElement) {
+                            counterDiagonalTop++;
+                            actColumnIndexRight++;
+                            actElementRight = actRowIndex < board.length && actColumnIndexRight < board[actRowIndex].length ? board[actRowIndex][actColumnIndexRight] : 0;
+                        }
+                    }
+                }
+            }
+
+            if (counterVertical >= this.winNumber || counterDiagonalTop >= this.winNumber || counterDiagonalBottom >= this.winNumber) {
+                this.winnerPlayer = actWinElement;
+                return;
             }
         }
 
-        // átlók ellenőrzése
-        for (int i = 0; i <= (this.board.length - this.winNumber); i++) {
-            for (int j = 0; j < this.board[i].length; j++) {
-                // jobbra le átlóba
-                if (j <= (this.board[i].length - this.winNumber) && this.board[i][j] > 0) {
-                    int actWinElement = this.board[i][j];
-                    int counter = 1;
-                    for (int k = 1; k < this.winNumber; k++) {
-                        int actElement = this.board[i + k][j + k];
-                        if (actElement == actWinElement) {
-                            counter++;
-                        } else {
-                            break;
-                        }
-                    }
-                    if (counter == this.winNumber) {
-                        this.winnerPlayer = actWinElement;
-                        return;
-                    }
-                }
-                // balra le átlóba
-                if (j >= (this.winNumber - 1) && this.board[i][j] > 0) {
-                    int actWinElement = this.board[i][j];
-                    int counter = 1;
-                    for (int k = 1; k < this.winNumber; k++) {
-                        int actElement = this.board[i + k][j - k];
-                        if (actElement == actWinElement) {
-                            counter++;
-                        } else {
-                            break;
-                        }
-                    }
-                    if (counter == this.winNumber) {
-                        this.winnerPlayer = actWinElement;
-                        return;
-                    }
-                }
-            }
-        }
     }
 }
