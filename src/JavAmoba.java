@@ -1,21 +1,21 @@
-import java.util.Scanner;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 
-public class JavAmoba {
+public class JavAmoba extends Application {
 
-    public static void main(String[] args) throws Exception {
-        Game game = new Game();
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            System.out.print("\033[H\033[2J");
-            System.out.flush();
-            game.printBoard();
-            System.out.println("\nKövetkező: " + game.getNextPlayer());
-            System.out.print("Sor: ");
-            int row = scanner.nextInt();
-            System.out.print("Oszlop: ");
-            int column = scanner.nextInt();
-            game.setCell(row, column, game.getNextPlayer());
-        }
+    @Override
+    public void start(Stage primaryStage) throws Exception {
+        Parent root = FXMLLoader.load(getClass().getResource("gameboard.fxml"));
+        primaryStage.setTitle("JavAmőba");
+        primaryStage.setScene(new Scene(root, 800, 600));
+        primaryStage.show();
+    }
+
+    public static void main(String[] args) {
+        launch(args);
     }
 
 }
