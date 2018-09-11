@@ -20,10 +20,14 @@ public class GameBoardController {
     public void initialize() {
         try {
             game = new GameController();
+            printGameBoard();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
+    }
+
+    private void printGameBoard() {
         winnerLabel.setText("Kezdő játékos: " + game.getGame().getNextPlayerChar());
 
         // a BoardPane-hez hozzáadjuk a sorokat (i), oszlopokat (j)
