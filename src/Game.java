@@ -30,7 +30,7 @@ public class Game {
                     this.winNumber = winNumber;
                     this.nextPlayer = firstPlayer;
                 } else {
-                    throw new Exception("A kezdő játékos száma 1-es vagy 2-es lehet!");
+                    throw new Exception("A kezdő játékos értéke 1-es vagy 2-es lehet!");
                 }
             } else {
                 throw new Exception("A győztes lerakások száma nem lehet kisebb mint " + MINWINNUMBER + "!");
@@ -52,6 +52,13 @@ public class Game {
         return SECONDPLAYERCHAR;
     }
 
+    /**
+     * @param  row
+     * @param  column
+     * @param  player
+     * @return           Ha van győztes, akkor a száma, egyébként 0.
+     * @throws Exception
+     */
     public int setCell(int row, int column, int player) throws Exception {
         if (this.winnerPlayer == 0) {
             if (player == this.nextPlayer) {
@@ -146,7 +153,7 @@ public class Game {
     /**
      * Annak ellenőrzése, hogy van-e már nyertes.
      */
-    private void win(int row, int column) {
+    private int win(int row, int column) {
         // Az utoljára lerakott ponttól kiindulva megszámoljuk, hogy hány ugyanolyan
         // pont van jobbra-balra, le-föl, balfönt-jobblent-átlósan,
         // ballent-jobbfönt-átlósan
@@ -184,7 +191,7 @@ public class Game {
 
             if (counterHorizental >= this.winNumber) {
                 this.winnerPlayer = actWinElement;
-                return;
+                return actWinElement;
             }
 
             // fel-le, átlósan
@@ -252,9 +259,10 @@ public class Game {
 
             if (counterVertical >= this.winNumber || counterDiagonalTop >= this.winNumber || counterDiagonalBottom >= this.winNumber) {
                 this.winnerPlayer = actWinElement;
-                return;
+                return actWinElement;
             }
         }
+        return 0;
 
     }
 }

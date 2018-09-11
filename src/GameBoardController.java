@@ -1,5 +1,6 @@
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -23,10 +24,13 @@ public class GameBoardController {
             e.printStackTrace();
         }
 
+        winnerLabel.setText("Kezdő játékos: " + (game.getNextPlayer() == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
+
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
                 TextField tf = new TextField("");
                 tf.setEditable(false);
+                tf.setCursor(Cursor.CLOSED_HAND);
                 int size = 26;
                 tf.setMinSize(size, size);
                 tf.setPrefSize(size, size);
@@ -48,9 +52,12 @@ public class GameBoardController {
                                         public void handle(MouseEvent event) {
                                         }
                                     });
+                                    element.setCursor(Cursor.DEFAULT);
+                                    element.setDisable(true);
                                 }
-                                char winnerChar = winner == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR();
-                                winnerLabel.setText("A győztes játékos: " + winnerChar);
+                                winnerLabel.setText("A győztes játékos: " + (winner == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
+                            } else {
+                                winnerLabel.setText("Következő játékos: " + (game.getNextPlayer() == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
