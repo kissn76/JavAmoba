@@ -1,7 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
 
 
-<GridPane id="gameBoardPane" fx:id="gameBoardPane" minHeight="200.0" minWidth="200.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GameBoardController">
-</GridPane>
+<VBox alignment="TOP_CENTER" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GameBoardController">
+    <children>
+        <GridPane id="gameBoardPane" fx:id="gameBoardPane" minHeight="200.0" minWidth="200.0">
+        </GridPane>
+        <Label id="winnerLabel" fx:id="winnerLabel" textAlignment="CENTER" textFill="RED">
+            <font>
+                <Font size="42.0" />
+            </font>
+        </Label>
+    </children>
+</VBox>

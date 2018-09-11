@@ -5,6 +5,8 @@ public class Game {
     private int winNumber;
     private int winnerPlayer;
 
+    private final char FIRSTPLAYERCHAR = 'X';
+    private final char SECONDPLAYERCHAR = 'O';
     private final int MINCOLUMN = 3;
     private final int MINROW = 3;
     private final int MINWINNUMBER = 3;
@@ -42,15 +44,25 @@ public class Game {
         return nextPlayer;
     }
 
-    public void setCell(int row, int column, int player) throws Exception {
+    public char getFIRSTPLAYERCHAR() {
+        return FIRSTPLAYERCHAR;
+    }
+
+    public char getSECONDPLAYERCHAR() {
+        return SECONDPLAYERCHAR;
+    }
+
+    public int setCell(int row, int column, int player) throws Exception {
         if (this.winnerPlayer == 0) {
             if (player == this.nextPlayer) {
                 if (row >= 0 && row < this.board.length && column >= 0 && column < this.board[0].length) {
                     if (this.board[row][column] == 0) {
                         this.board[row][column] = player;
+                        System.out.println(player + ": " + row + "," + column);
                         win(row, column);
                         if (this.winnerPlayer > 0) {
-                            return;
+                            System.out.println("Winner: " + winnerPlayer);
+                            return winnerPlayer;
                         }
                         nextPlayer();
                     } else {
@@ -65,6 +77,7 @@ public class Game {
         } else {
             throw new Exception("A játék véget ért, van már nyertes!");
         }
+        return 0;
     }
 
     public void printBoard() {
@@ -96,10 +109,10 @@ public class Game {
                         printChar = ' ';
                         break;
                     case 1:
-                        printChar = 'X';
+                        printChar = FIRSTPLAYERCHAR;
                         break;
                     case 2:
-                        printChar = 'O';
+                        printChar = SECONDPLAYERCHAR;
                         break;
                 }
                 System.out.print(" " + printChar + " |");   // bogyók a táblán
