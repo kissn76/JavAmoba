@@ -8,7 +8,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 
 public class GameBoardController {
-    Game game;
+    GameController game;
 
     @FXML
     private GridPane gameBoardPane;
@@ -19,15 +19,17 @@ public class GameBoardController {
     @FXML
     public void initialize() {
         try {
-            game = new Game();
+            game = new GameController();
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        winnerLabel.setText("Kezdő játékos: " + (game.getNextPlayer() == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
+        winnerLabel.setText("Kezdő játékos: " + game.getGame().getNextPlayerChar());
 
+        // a BoardPane-hez hozzáadjuk a sorokat (i), oszlopokat (j)
         for (int i = 0; i < 20; i++) {
             for (int j = 0; j < 20; j++) {
+                // a cellák létrehozása
                 TextField tf = new TextField("");
                 tf.setEditable(false);
                 tf.setCursor(Cursor.CLOSED_HAND);
@@ -35,29 +37,24 @@ public class GameBoardController {
                 tf.setMinSize(size, size);
                 tf.setPrefSize(size, size);
                 tf.setMaxSize(size, size);
+                // amikor rákattintunk a cellára
                 tf.setOnMouseClicked(new EventHandler<MouseEvent>() {
                     @Override
                     public void handle(MouseEvent event) {
-                        char text = game.getNextPlayer() == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR();
-                        tf.setText(String.valueOf(text));
+                        tf.setText(String.valueOf(game.getGame().getNextPlayerChar()));
+                        tf.setDisable(true);
                         int rowIndex = GridPane.getRowIndex(tf);
                         int columnIndex = GridPane.getColumnIndex(tf);
                         try {
-                            int winner = game.setCell(rowIndex, columnIndex, game.getNextPlayer());
+                            int winner = game.setCell(rowIndex, columnIndex, game.getGame().getNextPlayer());
                             // ha van győztes, akko már nem klikkelhetőek a cellák
                             if (winner > 0) {
                                 for (Node element : gameBoardPane.getChildren()) {
-                                    element.setOnMouseClicked(new EventHandler<MouseEvent>() {
-                                        @Override
-                                        public void handle(MouseEvent event) {
-                                        }
-                                    });
-                                    element.setCursor(Cursor.DEFAULT);
                                     element.setDisable(true);
                                 }
-                                winnerLabel.setText("A győztes játékos: " + (winner == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
+                                winnerLabel.setText("A győztes játékos: " + game.getGame().getWinnerPlayerChar());
                             } else {
-                                winnerLabel.setText("Következő játékos: " + (game.getNextPlayer() == 1 ? game.getFIRSTPLAYERCHAR() : game.getSECONDPLAYERCHAR()));
+                                winnerLabel.setText("Következő játékos: " + game.getGame().getNextPlayerChar());
                             }
                         } catch (Exception e) {
                             e.printStackTrace();
