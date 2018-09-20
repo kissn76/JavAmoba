@@ -1,3 +1,4 @@
+package game;
 /**
  * POJO class
  */

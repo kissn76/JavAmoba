@@ -1,3 +1,6 @@
+package client.gui;
+
+import game.GameController;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.Cursor;

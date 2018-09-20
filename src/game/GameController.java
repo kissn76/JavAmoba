@@ -1,13 +1,22 @@
+package game;
+
+import java.util.UUID;
 
 public class GameController {
     private Game game;
+    private final UUID uuid;
 
     public GameController() throws Exception {
         game = new Game();
+        uuid = UUID.randomUUID();
     }
 
     public Game getGame() {
         return game;
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 
     /**
@@ -54,7 +63,9 @@ public class GameController {
     }
 
     /**
-     * Annak ellenőrzése, hogy van-e már nyertes.
+     * Annak ellenőrzése, hogy van-e már nyertes. Paraméternek megkapja a referencia
+     * cellát, annak az elemét vizsgálja (1 vagy 2). A referencia cellától minden
+     * irányba összeszámolja, hogy mennyi ugyanolyan elem van letéve.
      * 
      * @param  row    Az utolsó tét sora
      * @param  column Az utolsó tét oszlopa
@@ -65,7 +76,7 @@ public class GameController {
         // pont van jobbra-balra, le-föl, balfönt-jobblent-átlósan,
         // ballent-jobbfönt-átlósan
 
-        final int actWinElement = game.getBoardCell(row, column);
+        final int actWinElement = game.getBoardCell(row, column);   // ehhez a téthez képest vizsgálunk
 
         if (actWinElement > 0) {
 
