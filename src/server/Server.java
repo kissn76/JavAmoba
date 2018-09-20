@@ -43,83 +43,97 @@ public class Server {
 
     private static class ClientThread extends Thread {
         private Socket socket;
+        private BufferedReader in;
+        private PrintWriter out;
+
         private static int connectionsNumber = 0;
 
+        private final int NEWGAME_NUMBER = 1;
+        private final int OLDGAME_NUMBER = 2;
+        private final int EXIT_NUMBER = 9;
+
         public ClientThread(Socket socket) {
-            this.socket = socket;
-            connectionsNumber++;
-        }
-
-        public void run() {
-            final int EXIT_NUMBER = 9;
-            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-            Calendar cal;
             try {
-                BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
-
-                cal = Calendar.getInstance();
-                log("New client connected! " + dateFormat.format(cal.getTime()) + " " + socket);
-                log("Connections: " + connectionsNumber);
-
-                // elküld 5 sor szöveget a kliensnek
-                out.println("Hello gamer!");
-                out.println("1 - Start new game");
-                out.println("2 - Connect to an old game");
-                out.println(EXIT_NUMBER + " - Quit");
-                out.println("");
-
-                while (true) {
-                    String input = in.readLine();
-                    String answer = null;
-                    int inputNumber = 0;
-                    String uuid = null;
-
-                    try {
-                        inputNumber = Integer.parseInt(input);
-
-                        switch (inputNumber) {
-                            case 1: // Start new game
-                                answer = "sng" + "Start new game";
-                                uuid = createNewGame();
-                                connectOldGame(uuid);
-                                break;
-
-                            case 2: // Connect to an old game
-                                answer = "cog" + "Connect to an old game" + "\nPlease enter the UUID of game:";
-                                uuid = in.readLine();
-                                connectOldGame(uuid);
-                                break;
-
-                            case EXIT_NUMBER: // Quit
-                                answer = "bbb" + "Bye bye!";
-                                break;
-
-                            default:
-                                answer = "nvn" + "Not a valid number";
-                                break;
-                        }
-                    } catch (NumberFormatException e) {
-                        answer = "ean" + "Enter a number!";
-                    }
-                    out.println(answer);
-
-                    if (inputNumber == EXIT_NUMBER) {
-                        break;
-                    }
-                }
+                this.socket = socket;
+                connectionsNumber++;
+                this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+                this.out = new PrintWriter(this.socket.getOutputStream(), true);
             } catch (IOException e) {
                 e.printStackTrace();
-            } finally {
+            }
+        }
+
+        @Override
+        public void run() {
+            String answer = null;
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            Calendar cal = Calendar.getInstance();
+            log("New client connected! " + dateFormat.format(cal.getTime()) + " " + this.socket);
+            log("Connections: " + connectionsNumber);
+
+            int inputNumber = mainMenu();
+
+            switch (inputNumber) {
+                case NEWGAME_NUMBER: // Start new game
+                    String uuid = createNewGame();
+                    connectOldGame(uuid);
+                    break;
+
+                case OLDGAME_NUMBER: // Connect to an old game
+                    connectOldGame();
+                    break;
+
+                case EXIT_NUMBER: // Quit
+                    break;
+            }
+
+            try {
+                cal = Calendar.getInstance();
+                log("Client disconnected! " + dateFormat.format(cal.getTime()) + " " + this.socket);
+                this.socket.close();
+                connectionsNumber--;
+                log("Connections: " + connectionsNumber);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        private int mainMenu() {
+            while (true) {
+                String errorMessage = null;
+                int inputNumber = 0;
+
+                // elküld 5 sor szöveget a kliensnek
+                String message = "Hello gamer!" + "\n";
+                message += this.NEWGAME_NUMBER + " - Start new game" + "\n";
+                message += this.OLDGAME_NUMBER + " - Connect to an old game" + "\n";
+                message += this.EXIT_NUMBER + " - Quit" + "\n" + "\n";
+                this.out.println(message);
+
                 try {
-                    cal = Calendar.getInstance();
-                    log("Client disconnected! " + dateFormat.format(cal.getTime()) + " " + socket);
-                    socket.close();
-                    connectionsNumber--;
-                    log("Connections: " + connectionsNumber);
+                    String input = this.in.readLine();
+                    inputNumber = Integer.parseInt(input);
+
+                    switch (inputNumber) {
+                        case NEWGAME_NUMBER: // Start new game
+                            return inputNumber;
+
+                        case OLDGAME_NUMBER: // Connect to an old game
+                            return inputNumber;
+
+                        case EXIT_NUMBER: // Quit
+                            return inputNumber;
+
+                        default:
+                            errorMessage = "nvn" + "Not a valid number";
+                            break;
+                    }
+                } catch (NumberFormatException e) {
+                    errorMessage = "ean" + "Enter a valid number!";
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+                this.out.println(errorMessage);
             }
         }
 
@@ -137,10 +151,53 @@ public class Server {
             return uuid;
         }
 
-        private void connectOldGame(String uuid) {
-            log(uuid);
+        private void connectOldGame() {
+            try {
+                String uuid;
+
+                do {
+                    this.out.println("Enter a valid game uuid, please:");
+                } while (!gameControllerArray.containsKey(uuid = this.in.readLine()));
+
+                connectOldGame(uuid);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
+        private void connectOldGame(String uuid) {
+            GameController gc = gameControllerArray.get(uuid);
+            Play play = (Play) getThreadByName(gc.getUuid().toString());
+            if (play != null) {
+                // van üres gamer hely?
+            } else {
+                new Play(gc).start();
+            }
+        }
+
+        private Thread getThreadByName(String threadName) {
+            for (Thread t : Thread.getAllStackTraces().keySet()) {
+                if (t.getName().equals(threadName)) {
+                    return t;
+                }
+            }
+            return null;
+        }
+
+    }
+
+    private class Play extends Thread {
+        GameController gameController;
+        Socket gamer1;
+        Socket gamer2;
+
+        public Play(GameController gameController) {
+            super(gameController.getUuid().toString());
+        }
+
+        @Override
+        public void run() {
+        }
     }
 
 }
