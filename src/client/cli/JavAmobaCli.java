@@ -1,78 +1,95 @@
 package client.cli;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
+import server.Codes;
+
 public class JavAmobaCli {
+    private static BufferedReader in = null;
+    private static PrintWriter out = null;
+    private static Scanner scanner = new Scanner(System.in);
+
+    private static int player = 0;
 
     public static void main(String[] args) throws Exception {
         String serverAddress = "localhost";
         int serverPort = 9898;
 
         Socket socket = new Socket(serverAddress, serverPort);
-        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+        in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        out = new PrintWriter(socket.getOutputStream(), true);
 
-        // beolvassa az első 5 sort, amit a szerver küld
-        for (int i = 0; i < 5; i++) {
-            System.out.println(in.readLine());
+        System.out.println("1 - New game");
+        System.out.println("2 - Connect game with ID");
+        System.out.println("9 - Exit");
+        int whatToDo = scanner.nextInt();
+
+        switch (whatToDo) {
+            case 1:
+                System.out.println("Player (1,2): ");
+                player = scanner.nextInt();
+                out.print(Codes.NEWGAME + player);
+                startGame();
+                break;
+            case 2:
+                System.out.println("ID: ");
+                String uuid = scanner.nextLine();
+                System.out.println("Player (1,2): ");
+                player = scanner.nextInt();
+                out.print(Codes.OLDGAME + player + uuid);
+                startGame();
+                break;
+            case 9:
+                out.println(Codes.EXIT);
+                socket.close();
+                System.exit(0);
+                break;
         }
+        socket.close();
+    }
 
-        Scanner scanner = new Scanner(System.in);
-
+    private static void startGame() {
         while (true) {
-            String whatToDo = scanner.nextLine();
-            out.println(whatToDo);
-            String massage = in.readLine();
-            System.out.println(massage.substring(3));
+            try {
+                String input = in.readLine();
+                String code = input.substring(0, 8);
+                String message = null;
 
-            String code = massage.substring(0, 3);
-            if (code.equals("sng")) {
-                startNewGame();
-            } else if (code.equals("cog")) {
-                connectOldGame();
-            } else if (code.equals("nvn")) {
-                System.out.println("Olvass, ecsém!");
-            } else if (code.equals("ean")) {
-                System.out.println("Írjá mán egy számot, he!");
-            } else if (code.equals("bbb")) {
-                quit();
+                if (input.length() > 8) {
+                    message = input.substring(8);
+                }
+
+                switch (code) {
+                    case Codes.BOARD:
+                        System.out.println(message);
+                        break;
+                    case Codes.YOUPLAY:
+                        System.out.println("You play! row,column");
+                        String odds = scanner.nextLine();
+                        out.println(odds);
+                        break;
+                    case Codes.OTHERPLAYER:
+                        System.out.println("Not you play!");
+                        break;
+                    case Codes.INVALIDID:
+                        System.out.println("Invalid ID!");
+                        return;
+                    case Codes.YOUWIN:
+                        System.out.println("You win!");
+                        return;
+                    case Codes.OTHERWIN:
+                        System.out.println("Not you win!");
+                        return;
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
-
-        // GameController gameController = new GameController();
-        // Game game = gameController.getGame();
-        // while (true) {
-        // System.out.print("\033[H\033[2J");
-        // System.out.flush();
-        // System.out.println(game.getBoardView());
-        // ;
-        // System.out.println("\nKövetkező: " + game.getNextPlayerChar());
-        // System.out.print("Sor: ");
-        // int row = scanner.nextInt();
-        // System.out.print("Oszlop: ");
-        // int column = scanner.nextInt();
-        // gameController.setCell(row, column, game.getNextPlayer());
-        // }
-
-        // scanner.close();
-        // socket.close();
-    }
-
-    private static void startNewGame() {
-        System.out.println("Új játék indul!");
-    }
-
-    private static void connectOldGame() {
-        System.out.println("Kapcsolódás futó játékhoz");
-    }
-
-    private static void quit() {
-        System.out.println("Viszlát legközelebb!");
-        System.exit(0);
     }
 
 }
