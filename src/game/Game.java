@@ -93,6 +93,14 @@ public class Game {
         this.winnerPlayer = winnerPlayer;
     }
 
+    public boolean hasWinnerPlayer() {
+        if (winnerPlayer != 0) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     public int getWinnerPlayer() {
         return winnerPlayer;
     }
