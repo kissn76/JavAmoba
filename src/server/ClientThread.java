@@ -3,10 +3,13 @@ package server;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 
 import game.GameController;
@@ -15,6 +18,7 @@ public class ClientThread extends Thread {
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
+    private ObjectOutputStream oos;
 
     private String uuid;
     private GameController gameController = null;
@@ -30,6 +34,7 @@ public class ClientThread extends Thread {
         connectionsNumber++;
         this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
         this.out = new PrintWriter(this.socket.getOutputStream(), true);
+        this.oos = new ObjectOutputStream(socket.getOutputStream());
     }
 
     @Override
@@ -40,12 +45,15 @@ public class ClientThread extends Thread {
 
         try {
             String input = this.in.readLine();
-            String code = input.substring(0, 8);
+            String code = null;
 
-            if (input.length() > 8) {
-                this.player = Integer.parseInt(input.substring(8, 9));
-                if (input.length() > 9) {
-                    this.uuid = input.substring(9);
+            if (input.length() >= 8) {
+                code = input.substring(0, 8);
+                if (input.length() > 8) {
+                    this.player = Integer.parseInt(input.substring(8, 9));
+                    if (input.length() > 9) {
+                        this.uuid = input.substring(9);
+                    }
                 }
             }
 
@@ -88,17 +96,22 @@ public class ClientThread extends Thread {
         }
 
         int winner = 0;
-        while (winner == 0) {
+        while (true) { // winner == 0
             try {
-                this.out.println(Codes.BOARD + this.gameController.getGame().getBoardView());
+                sendBoard();
                 if (this.gameController.getGame().getNextPlayer() == this.player) {
                     this.out.println(Codes.YOUPLAY);
+                    Thread.sleep(2000);
                     String odds = this.in.readLine();
-                    String[] oddsParts = odds.split(",");
-                    int row = Integer.parseInt(oddsParts[0]);
-                    int column = Integer.parseInt(oddsParts[1]);
-                    winner = this.gameController.setCell(row, column, this.player);
+                    if (odds != null && !odds.equals("") && odds.length() > 3) {
+                        Logger.log(odds);
+                        String[] oddsParts = odds.split(",");
+                        int row = Integer.parseInt(oddsParts[0]);
+                        int column = Integer.parseInt(oddsParts[1]);
+                        winner = this.gameController.setCell(row, column, this.player);
+                    }
                 } else {
+                    System.out.println("kettes");
                     while (this.gameController.getGame().getNextPlayer() != this.player) {
                         this.out.println(Codes.OTHERPLAYER);
                         Thread.sleep(2000);
@@ -106,7 +119,7 @@ public class ClientThread extends Thread {
                 }
 
                 if (winner != 0) {
-                    this.out.println(Codes.BOARD + this.gameController.getGame().getBoardView());
+                    sendBoard();
                     PlayController.delGame(this.uuid);
                     if (winner == this.player) {
                         this.out.println(Codes.YOUWIN);
@@ -117,6 +130,23 @@ public class ClientThread extends Thread {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+    }
+
+    private void sendBoard() {
+        int[][] boardArray = gameController.getGame().getBoard();
+        ArrayList<Integer[]> board = new ArrayList<>();
+        for (int[] x : boardArray) {
+            Integer[] intArr = Arrays.stream(x).boxed().toArray(Integer[]::new);
+            board.add(intArr);
+        }
+        try {
+            this.out.println(Codes.BOARD);
+            Thread.sleep(2000);
+            this.oos.writeObject(board);
+            System.out.println("tábla");
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

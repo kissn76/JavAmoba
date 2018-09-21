@@ -1,4 +1,5 @@
 package game;
+
 /**
  * POJO class
  */
@@ -11,11 +12,11 @@ public class Game {
     private int nextPlayer; // ő rakja a következőt (1,2)
     private int winnerPlayer;
 
-    private final char FIRSTPLAYERCHAR = 'X';
-    private final char SECONDPLAYERCHAR = 'O';
-    private final int MINCOLUMN = 3;
-    private final int MINROW = 3;
-    private final int MINWINNUMBER = 3;
+    public static final char FIRSTPLAYERCHAR = 'X';
+    public static final char SECONDPLAYERCHAR = 'O';
+    private static final int MINCOLUMN = 3;
+    private static final int MINROW = 3;
+    private static final int MINWINNUMBER = 3;
 
     public Game() throws Exception {
         this(20, 20, 5, 1);
@@ -50,6 +51,10 @@ public class Game {
 
     public int getWinNumber() {
         return winNumber;
+    }
+
+    public int[][] getBoard() {
+        return board;
     }
 
     public int getBoardRowNumber() {
@@ -98,67 +103,6 @@ public class Game {
         } else {
             return SECONDPLAYERCHAR;
         }
-    }
-
-    /**
-     * Kirajzolja a játéktáblát standard kimenetre.
-     */
-    public String getBoardView() {
-        String retString = "";
-        if (this.winnerPlayer > 0) {
-            retString += "A nyertes játékos: " + this.winnerPlayer + "\n";
-        }
-
-        // 1. sor, oszlopszámok
-        retString += "   ";
-        for (int j = 0; j < board[0].length; j++) {
-            retString += String.format("|%2d ", j);
-        }
-        retString += "|\n";
-
-        // 2.sor
-        retString += "   ";
-        for (int j = 0; j < board[0].length; j++) {
-            retString += "|–––";
-        }
-        retString += "|\n";
-
-        // tábla
-        for (int i = 0; i < this.board.length; i++) {
-            retString += String.format("%3d|", i);    // sorszám az elején
-            for (int j = 0; j < this.board[i].length; j++) {
-                char printChar = '-';
-                switch (this.board[i][j]) {
-                    case 0:
-                        printChar = ' ';
-                        break;
-                    case 1:
-                        printChar = FIRSTPLAYERCHAR;
-                        break;
-                    case 2:
-                        printChar = SECONDPLAYERCHAR;
-                        break;
-                }
-                retString += " " + printChar + " |";   // bogyók a táblán
-            }
-            retString += i + "\n";  // sorszám a végén
-
-            // sorelválasztók
-            retString += "   ";
-            for (int j = 0; j < board[i].length; j++) {
-                retString += "|–––";
-            }
-            retString += "|\n";
-        }
-
-        // utolsó sor, oszlopszámok
-        retString += "   ";
-        for (int j = 0; j < board[0].length; j++) {
-            retString += String.format("|%2d ", j);
-        }
-        retString += "|\n";
-
-        return retString;
     }
 
 }
