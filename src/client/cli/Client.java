@@ -93,11 +93,10 @@ public class Client extends Thread {
                     break;
                 case Codes.YOUPLAY:
                     System.out.println("You play! row,column");
-                    String odds = this.scanner.nextLine();
+                    String odds = this.scanner.next();
                     this.oos.writeObject(odds);
                     break;
                 case Codes.OTHERPLAYER:
-                    // System.out.println("Not you play!");
                     break;
                 case Codes.INVALIDID:
                     System.out.println("Invalid ID!");
