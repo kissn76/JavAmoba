@@ -16,8 +16,6 @@ public class Client extends Thread {
     private final int SERVERPORT = 9898;
 
     private Socket socket;
-    // private BufferedReader in;
-    // private PrintWriter out;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
     private Scanner scanner;
@@ -26,9 +24,6 @@ public class Client extends Thread {
 
     public Client() throws UnknownHostException, IOException {
         this.socket = new Socket(SERVERADDRESS, SERVERPORT);
-        // this.in = new BufferedReader(new
-        // InputStreamReader(this.socket.getInputStream()));
-        // this.out = new PrintWriter(this.socket.getOutputStream(), true);
         this.oos = new ObjectOutputStream(socket.getOutputStream());
         this.ois = new ObjectInputStream(socket.getInputStream());
         this.scanner = new Scanner(System.in);
@@ -45,14 +40,6 @@ public class Client extends Thread {
                     System.out.println("Player (1,2): ");
                     player = this.scanner.nextInt();
                     this.oos.writeObject(Codes.NEWGAME + player);
-
-                    try {
-                        String uuid = (String) this.ois.readObject();
-                        System.out.println(uuid);
-                    } catch (IOException e1) {
-                        e1.printStackTrace();
-                    }
-
                     startGame();
                     break;
                 case 2:
@@ -100,8 +87,9 @@ public class Client extends Thread {
 
             switch (code) {
                 case Codes.BOARD:
+                    String uuid = (String) ois.readObject();
                     ArrayList<Integer[]> board = (ArrayList<Integer[]>) this.ois.readObject();
-                    printBoard(board);
+                    printBoard(board, uuid);
                     break;
                 case Codes.YOUPLAY:
                     System.out.println("You play! row,column");
@@ -128,8 +116,8 @@ public class Client extends Thread {
     /**
      * Kirajzolja a játéktáblát standard kimenetre.
      */
-    private void printBoard(ArrayList<Integer[]> boardArrayList) {
-        String retString = "";
+    private void printBoard(ArrayList<Integer[]> boardArrayList, String uuid) {
+        String retString = "Game ID: " + uuid + "\n";
 
         // 1. sor, oszlopszámok
         retString += "   ";

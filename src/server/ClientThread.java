@@ -14,8 +14,6 @@ import game.GameController;
 
 public class ClientThread extends Thread {
     private Socket socket;
-    // private BufferedReader in;
-    // private PrintWriter out;
     private ObjectOutputStream oos;
     private ObjectInputStream ois;
 
@@ -31,9 +29,6 @@ public class ClientThread extends Thread {
     public ClientThread(Socket socket) throws IOException {
         this.socket = socket;
         connectionsNumber++;
-        // this.in = new BufferedReader(new
-        // InputStreamReader(this.socket.getInputStream()));
-        // this.out = new PrintWriter(this.socket.getOutputStream(), true);
         this.oos = new ObjectOutputStream(socket.getOutputStream());
         this.ois = new ObjectInputStream(socket.getInputStream());
     }
@@ -61,7 +56,6 @@ public class ClientThread extends Thread {
             switch (code) {
                 case Codes.NEWGAME:  // Start new game
                     this.uuid = PlayController.createNewGame();
-                    this.oos.writeObject("New game ID: " + this.uuid);
                     startGame();
                     break;
 
@@ -135,6 +129,7 @@ public class ClientThread extends Thread {
             board.add(intArr);
         }
         this.oos.writeObject(Codes.BOARD);
+        this.oos.writeObject(uuid);
         this.oos.writeObject(board);
     }
 
